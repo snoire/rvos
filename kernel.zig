@@ -1,3 +1,7 @@
+const uart = @import("uart.zig");
+
 export fn start_kernel() noreturn {
-    while (true) {} // stop here!
+    _ = uart.write("Hello, RVOS!\n");
+
+    while (true) {}     // stop here!
 }
