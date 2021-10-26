@@ -62,7 +62,6 @@ const lsr = struct {
     const fifo_data_error = 0x80;
 };
 
-
 // Singleton struct to make `std.io.Writer` happy
 pub const Uart = struct {
     const Self = @This();

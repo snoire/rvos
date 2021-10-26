@@ -2,6 +2,12 @@ OUTPUT_ARCH( "riscv" )
 
 ENTRY( _start )
 
+MEMORY
+{
+    /* llvm 好像不支持 i 这个属性 */
+    ram (wxa!r) : ORIGIN = 0x80000000, LENGTH = 128M
+}
+
 PHDRS {
     text PT_LOAD FLAGS(5);   /* R-X */
     rodata PT_LOAD FLAGS(4); /* R-- */
@@ -13,20 +19,53 @@ SECTIONS
     . = 0x80000000;
 
     .text : {
-		*(.text .text.*)
-    } :text
+        PROVIDE(_text_start = .);
+        *(.text .text.*)
+        PROVIDE(_text_end = .);
+    } >ram :text
 
     .rodata : { 
-		*(.rodata .rodata.*)
-    } :rodata
+        PROVIDE(_rodata_start = .);
+        *(.rodata .rodata.*)
+        PROVIDE(_rodata_end = .);
+    } >ram :rodata
 
-    .data : { 
-		*(.data .data.*)
-    } :data
+    .data : {
+        /*
+         * . = ALIGN(4096) tells the linker to align the current memory
+         * location to 4096 bytes. This will insert padding bytes until
+         * current location becomes aligned on 4096-byte boundary.
+         * This is because our paging system's resolution is 4,096 bytes.
+         */
+        . = ALIGN(4096);
+        PROVIDE(_data_start = .);
+        /*
+         * sdata and data are essentially the same thing. We do not need
+         * to distinguish sdata from data.
+         */
+        *(.sdata .sdata.*)
+        *(.data .data.*)
+        PROVIDE(_data_end = .);
+    } >ram :data
 
-    .bss : { 
-		*(.bss .bss.*)
-    } :data
+    .bss :{
+        /*
+         * https://sourceware.org/binutils/docs/ld/Input-Section-Common.html
+         * In most cases, common symbols in input files will be placed
+         * in the ‘.bss’ section in the output file.
+         */
+        PROVIDE(_bss_start = .);
+        *(.sbss .sbss.*)
+        *(.bss .bss.*)
+        *(COMMON)
+        PROVIDE(_bss_end = .);
+    } >ram :data
+
+    PROVIDE(_memory_start = ORIGIN(ram));
+    PROVIDE(_memory_end = ORIGIN(ram) + LENGTH(ram));
+
+    PROVIDE(_heap_start = _bss_end);
+    PROVIDE(_heap_size = _memory_end - _heap_start);
 
     /DISCARD/ : { *(.comment) }
 }

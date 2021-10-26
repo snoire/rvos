@@ -1,7 +1,7 @@
 .equ    MAXNUM_CPU, 8
 
         # size of each hart's stack is 1024 bytes
-        .equ    STACK_SIZE, 1024
+        .equ    STACK_SIZE, 8192
 
         .global _start
 
