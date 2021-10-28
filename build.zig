@@ -18,7 +18,7 @@ pub fn build(b: *std.build.Builder) void {
     });
 
     os.setLinkerScriptPath(.{ .path = "linker.ld" });
-    os.addAssemblyFile("start.S");
+    //os.addAssemblyFile("start.S");
 
     os.install();
 

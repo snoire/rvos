@@ -20,6 +20,7 @@ SECTIONS
 
     .text : {
         PROVIDE(_text_start = .);
+        *(.text_start)
         *(.text .text.*)
         PROVIDE(_text_end = .);
     } >ram :text
