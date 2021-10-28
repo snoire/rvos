@@ -16,12 +16,14 @@ pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace) noreturn {
     while (true) {}
 }
 
-export fn _start() linksection(".text_start") callconv(.Naked) noreturn {
-    const hartid = asm volatile ("csrr %[value], mhartid"
+fn get_hartid() callconv(.Inline) usize {
+    return asm volatile ("csrr %[value], mhartid"
         : [value] "=r" (-> usize)
     );
+}
 
-    if (hartid != 0) {
+export fn _start() linksection(".text_start") callconv(.Naked) noreturn {
+    if (get_hartid() != 0) {
         asm volatile ("wfi");
     }
 
@@ -52,7 +54,51 @@ fn main() !void {
     //memory[0] = 128;
     //try print("memory addr: {*}, memory[0]: {}\n", .{ memory, memory[0] });
 
-    var x: u8 = 255;
-    x += 1;
-    try print("got here\n", .{});
+    var frame0 = async task0();
+    var frame1 = async task1();
+
+    var i: u1 = 0;
+    while (true) {
+        if (i == 0) {
+            resume frame0;
+            i = 1;
+        } else {
+            resume frame1;
+            i = 0;
+        }
+    }
+
+    //var x: u8 = 255;
+    //x += 1;
+    //try print("got here\n", .{});
+}
+
+fn task0() void {
+    try print("Task 0: Created!\n", .{});
+    suspend {}
+
+    while (true) {
+        try print("Task 0: Running...\n", .{});
+        delay();
+        suspend {}
+    }
+}
+
+fn task1() void {
+    try print("Task 1: Created!\n", .{});
+    suspend {}
+
+    while (true) {
+        try print("Task 1: Running...\n", .{});
+        delay();
+        suspend {}
+    }
+}
+
+fn delay() void {
+    var i: usize = 5000 * 5000;
+    var ptr: *volatile usize = &i;
+    while (ptr.* > 0) {
+        ptr.* -= 1;
+    }
 }
