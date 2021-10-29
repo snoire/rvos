@@ -2,8 +2,8 @@ const std = @import("std");
 
 pub fn build(b: *std.build.Builder) void {
     const os = b.addExecutable("os.elf", "kernel.zig");
-    const mode = b.standardReleaseOptions();
-    os.setBuildMode(mode);
+    //const mode = b.standardReleaseOptions();
+    os.setBuildMode(.ReleaseSafe);
 
     // Workaround for https://github.com/ziglang/zig/issues/9760
     var sub_set = std.Target.Cpu.Feature.Set.empty;
