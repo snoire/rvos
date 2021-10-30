@@ -6,6 +6,8 @@ pub const print = uart.writer().print;
 const page = @import("page.zig");
 const allocator = page.allocator;
 
+const task = @import("task.zig");
+
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace) noreturn {
     @setCold(true);
     try print("KERNEL PANIC: ", .{});
@@ -29,10 +31,6 @@ fn main() !void {
 
     page.info();
 
-    //// test
-    //const memory = try allocator.alloc(u8, 100);
-    //defer allocator.free(memory);
-
-    //memory[0] = 128;
-    //try print("memory addr: {*}, memory[0]: {}\n", .{ memory, memory[0] });
+    var task0 = task.Task.create(task.user_task0);
+    task.switch_to(&task0.regs);
 }
