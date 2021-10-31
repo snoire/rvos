@@ -10,14 +10,14 @@ const task = @import("task.zig");
 
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace) noreturn {
     @setCold(true);
-    try print("KERNEL PANIC: ", .{});
-    try print("{s}", .{msg});
+    try print("\nKERNEL PANIC: {s}\n", .{msg});
     while (true) {}
 }
 
 export fn start_kernel() noreturn {
     uart.init();
     page.init();
+    task.Tasks.init();
 
     main() catch {
         @panic("ops!\n");
@@ -31,6 +31,5 @@ fn main() !void {
 
     page.info();
 
-    var task0 = task.Task.create(task.user_task0);
-    task.switch_to(&task0.regs);
+    task.tasks.schedule();
 }
