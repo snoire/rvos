@@ -1,4 +1,5 @@
 const print = @import("root").print;
+const trap = @import("trap.zig");
 extern fn switch_to(to: *TaskRegs) callconv(.C) void; // 返回类型不能是 noreturn
 
 const TaskRegs = packed struct {
@@ -57,7 +58,8 @@ const Task = struct {
     //}
 };
 
-fn w_mscratch(x: u64) void {
+// Machine Scratch register, for early trap handler
+fn w_mscratch(x: u64) callconv(.Inline) void {
     return asm volatile ("csrw mscratch, %[value]"
         :
         : [value] "r" (x),
@@ -112,7 +114,7 @@ pub const Tasks = struct {
         switch_to(&self.tasks[self.current].regs);
     }
 
-    pub inline fn yield(self: *Tasks) void {
+    pub fn yield(self: *Tasks) callconv(.Inline) void {
         self.schedule();
     }
 };
@@ -122,6 +124,8 @@ fn user_task0() void {
 
     while (true) {
         try print("Task 0: Running...\n", .{});
+        trap.tests();   // exception!!
+
         delay(1000);
         tasks.yield();
     }

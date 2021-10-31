@@ -7,6 +7,7 @@ const page = @import("page.zig");
 const allocator = page.allocator;
 
 const task = @import("task.zig");
+const trap = @import("trap.zig");
 
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace) noreturn {
     @setCold(true);
@@ -18,6 +19,7 @@ export fn start_kernel() noreturn {
     uart.init();
     page.init();
     task.Tasks.init();
+    trap.init();
 
     main() catch {
         @panic("ops!\n");
@@ -33,4 +35,5 @@ fn main() !void {
     task.tasks.info();
 
     task.tasks.schedule();
+    try print("Would not go here!\n", .{});
 }
