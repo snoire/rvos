@@ -42,18 +42,19 @@ const TaskRegs = packed struct {
 };
 
 const Task = struct {
-    regs: TaskRegs,
-    stack: []u8,
+    regs: TaskRegs = .{ .ra = 0, .sp = 0 },
+    stack: [STACK_SIZE]u8 = [_]u8{0} ** STACK_SIZE,
 
     const STACK_SIZE = 1024;
-    pub fn create(func: fn () void) Task {
-        var task: Task = undefined;
-        var stack = [_]u8{0} ** STACK_SIZE;
+    //pub fn create(func: fn () void) Task {
+    //    var task: Task = undefined;
+    //    var stack = [_]u8{0} ** STACK_SIZE;
 
-        task.regs = TaskRegs.new(func, &stack);
-        task.stack = &stack;
-        return task;
-    }
+    //    try print("task created: stack.ptr {*}\n", .{&stack});    // 问题出在这
+    //    task.regs = TaskRegs.new(func, &stack);
+    //    task.stack = &stack;
+    //    return task;
+    //}
 };
 
 fn w_mscratch(x: u64) void {
@@ -82,8 +83,27 @@ pub const Tasks = struct {
         two_tasks.current = 1;
 
         inline for (.{ user_task0, user_task1 }) |func| {
-            two_tasks.tasks[two_tasks.top] = Task.create(func);
+            // 不能用这种方法创建结构体的实例，不然两个结构体 stack 是相同的
+            //two_tasks.tasks[two_tasks.top] = Task.create(func);
+            // 下面的方法可以得到预期结果，先创建，再赋值
+            var task = Task{};
+            task.regs = TaskRegs.new(func, &task.stack);
+
+            two_tasks.tasks[two_tasks.top] = task;
             two_tasks.top += 1;
+        }
+    }
+
+    pub fn info(self: *Tasks) void {
+        comptime var i = 0;
+        inline for (.{ user_task0, user_task1 }) |func| {
+            try print("task{d}: {any}, stack: {*} -> {*}\n", .{
+                i,
+                func,
+                &self.tasks[i].stack[0],
+                &self.tasks[i].stack[self.tasks[i].stack.len - 1],
+            });
+            i += 1;
         }
     }
 

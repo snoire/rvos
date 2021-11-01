@@ -14,7 +14,7 @@ _start:
         # Setup stacks, the stack grows from bottom to top, so we put the
         # stack pointer to the very end of the stack range.
         slli    t0, t0, 10              # shift left the hart id by 1024
-        la      sp, stacks + STACK_SIZE # set the initial stack pointer
+        la      sp, _stacks + STACK_SIZE# set the initial stack pointer
                                         # to the end of the first stack space
         add     sp, sp, t0              # move the current hart stack pointer
                                         # to its place in the stack space
@@ -25,7 +25,8 @@ park:
         wfi
         j       park
 
-stacks:
+        .global _stacks
+_stacks:
         .skip   STACK_SIZE * MAXNUM_CPU # allocate space for all the harts stacks
 
         .end                            # End of file

@@ -30,6 +30,7 @@ fn main() !void {
     try print("Hello, RVOS!\n", .{});
 
     page.info();
+    task.tasks.info();
 
     task.tasks.schedule();
 }

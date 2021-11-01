@@ -25,6 +25,7 @@ extern const _data_start: u8;
 extern const _data_end: u8;
 extern const _bss_start: u8;
 extern const _bss_end: u8;
+extern const _stacks: u8;
 
 pub fn info() void {
     try print(
@@ -34,6 +35,7 @@ pub fn info() void {
         \\DATA:   0x{x} -> 0x{x}
         \\BSS:    0x{x} -> 0x{x}
         \\HEAP:   0x{x} -> 0x{x}
+        \\STACK:  0x{x} -> 0x{x}
         \\
     , .{
         @ptrToInt(&_heap_start),
@@ -49,6 +51,8 @@ pub fn info() void {
         @ptrToInt(&_bss_end),
         @ptrToInt(&_heap_start),
         @ptrToInt(&_heap_start) + @ptrToInt(&_heap_size),
+        @ptrToInt(&_stacks),
+        @ptrToInt(&_stacks) + 1024 * 8 - 1,
     });
 }
 
