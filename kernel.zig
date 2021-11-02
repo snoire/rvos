@@ -1,4 +1,5 @@
 const std = @import("std");
+pub const arch = @import("riscv.zig");
 
 const uart = @import("uart.zig").Uart{};
 pub const print = uart.writer().print;

@@ -1,17 +1,10 @@
 const print = @import("root").print;
+const arch = @import("root").arch;
 extern fn trap_vector() callconv(.C) void;
-
-// Machine-mode interrupt vector
-inline fn w_mtvec(x: u64) void {
-    return asm volatile ("csrw mtvec, %[value]"
-        :
-        : [value] "r" (x),
-    );
-}
 
 pub fn init() void {
     // set the trap-vector base-address for machine-mode
-    w_mtvec(@ptrToInt(trap_vector));
+    arch.w_mtvec(@ptrToInt(trap_vector));
 }
 
 export fn trap_handler(epc: u32, cause: u32) u32 {

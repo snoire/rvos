@@ -1,4 +1,5 @@
 const print = @import("root").print;
+const arch = @import("root").arch;
 const trap = @import("trap.zig");
 extern fn switch_to(to: *TaskRegs) callconv(.C) void; // 返回类型不能是 noreturn
 
@@ -58,14 +59,6 @@ const Task = struct {
     //}
 };
 
-// Machine Scratch register, for early trap handler
-inline fn w_mscratch(x: u64) void {
-    return asm volatile ("csrw mscratch, %[value]"
-        :
-        : [value] "r" (x),
-    );
-}
-
 // 为了让 switch_to 能访问到，它必须是全局变量
 var two_tasks: Tasks = undefined;
 pub const tasks = &two_tasks;
@@ -78,7 +71,7 @@ pub const Tasks = struct {
 
     pub fn init() void {
         // 初始化 mscratch
-        w_mscratch(0);
+        arch.w_mscratch(0);
 
         // 给全局变量 two_tasks 赋值
         two_tasks.top = 0;
