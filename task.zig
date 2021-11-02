@@ -59,7 +59,7 @@ const Task = struct {
 };
 
 // Machine Scratch register, for early trap handler
-fn w_mscratch(x: u64) callconv(.Inline) void {
+inline fn w_mscratch(x: u64) void {
     return asm volatile ("csrw mscratch, %[value]"
         :
         : [value] "r" (x),
@@ -114,7 +114,7 @@ pub const Tasks = struct {
         switch_to(&self.tasks[self.current].regs);
     }
 
-    pub fn yield(self: *Tasks) callconv(.Inline) void {
+    pub inline fn yield(self: *Tasks) void {
         self.schedule();
     }
 };
@@ -124,7 +124,7 @@ fn user_task0() void {
 
     while (true) {
         try print("Task 0: Running...\n", .{});
-        trap.tests();   // exception!!
+        trap.tests(); // exception!!
 
         delay(1000);
         tasks.yield();
