@@ -28,7 +28,7 @@ extern const _bss_end: u8;
 extern const _stacks: u8;
 
 pub fn info() void {
-    try print(
+    print(
         \\HEAP_START = {x:0>8}, HEAP_SIZE = {x:0>8}, num of pages = {d}
         \\TEXT:   0x{x} -> 0x{x}
         \\RODATA: 0x{x} -> 0x{x}

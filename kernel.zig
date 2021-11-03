@@ -1,8 +1,8 @@
 const std = @import("std");
 pub const arch = @import("riscv.zig");
 
-const uart = @import("uart.zig").Uart{};
-pub const print = uart.writer().print;
+const uart = @import("uart.zig");
+pub const print = uart.print;
 
 const page = @import("page.zig");
 const allocator = page.allocator;
@@ -12,7 +12,7 @@ const trap = @import("trap.zig");
 
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace) noreturn {
     @setCold(true);
-    try print("\nKERNEL PANIC: {s}\n", .{msg});
+    print("\nKERNEL PANIC: {s}\n", .{msg});
     while (true) {}
 }
 
@@ -30,11 +30,11 @@ export fn start_kernel() noreturn {
 }
 
 fn main() !void {
-    try print("Hello, RVOS!\n", .{});
+    print("Hello, RVOS!\n", .{});
 
     page.info();
     task.tasks.info();
 
     task.tasks.schedule();
-    try print("Would not go here!\n", .{});
+    print("Would not go here!\n", .{});
 }

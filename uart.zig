@@ -1,40 +1,5 @@
-const io = @import("std").io;
-
-const reg = enum(u3) {
-    const Self = @This();
-    const base = 0x10000000;
-    const ptr = @intToPtr([*]volatile u8, base);
-
-    /// Receiver Holding Register (R)
-    rhr = 0,
-    /// Interrupt Enable Register (R/W)
-    ier = 1,
-    /// Interrupt Status Register (R)
-    isr = 2,
-    /// Line Control Register (R/W)
-    lcr = 3,
-    /// Modem Control Register (R/W)
-    mcr = 4,
-    /// Line Status Register (R)
-    lsr = 5,
-    /// Modem Status Register (R)
-    msr = 6,
-    /// Scratch Pad Register (R/W)
-    spr = 7,
-
-    /// Transmitter Holding Register (W)
-    const thr: Self = .rhr;
-    /// FIFO Control Register (W)
-    const fcr: Self = .isr;
-
-    fn set(self: Self, mask: u8) void {
-        ptr[@enumToInt(self)] |= mask;
-    }
-
-    fn isSet(self: Self, mask: u8) bool {
-        return ptr[@enumToInt(self)] & mask == mask;
-    }
-};
+const std = @import("std");
+const Uart = @import("mmio.zig").Uart;
 
 const fcr = struct {
     const fifo_enable = 0x01;
@@ -52,45 +17,39 @@ const lcr = struct {
 };
 
 const lsr = struct {
-    const data_ready = 0x01;
-    const overrun_error = 0x02;
-    const parity_error = 0x04;
-    const framing_error = 0x08;
-    const break_interrupt = 0x10;
-    const thr_empty = 0x20;
-    const transmitter_empty = 0x40;
-    const fifo_data_error = 0x80;
+    const data_ready = 1 << 0;
+    const overrun_error = 1 << 1;
+    const parity_error = 1 << 2;
+    const framing_error = 1 << 3;
+    const break_interrupt = 1 << 4;
+    const thr_empty = 1 << 5;
+    const transmitter_empty = 1 << 6;
+    const fifo_data_error = 1 << 7;
 };
 
-// Singleton struct to make `std.io.Writer` happy
-pub const Uart = struct {
-    const Self = @This();
-    const Writer = io.Writer(Self, error{}, write);
+pub fn init() void {
+    // Enable FIFO
+    Uart.fcr.write(u8, fcr.fifo_enable);
 
-    pub fn init(_: Self) void {
-        // Enable FIFO
-        reg.fcr.set(fcr.fifo_enable);
+    // Set the word length to 8 bits
+    Uart.lcr.write(u8, lcr.word_size_8bits);
+}
 
-        // Set the word length to 8 bits
-        reg.lcr.set(lcr.word_size_8bits);
+fn putc(char: u8) void {
+    while (Uart.lsr.read(u8) & lsr.thr_empty == 0) {}
+    Uart.thr.write(u8, char);
+}
 
-        // TODO: set the baud rate, and check if other options need to be set
+fn writeFn(_: void, string: []const u8) !usize {
+    for (string) |char| {
+        putc(char);
     }
 
-    fn writeChar(_: Self, char: u8) void {
-        while (!reg.lsr.isSet(lsr.thr_empty)) {}
-        reg.thr.set(char);
-    }
+    return string.len;
+}
 
-    pub fn write(self: Self, string: []const u8) !usize {
-        for (string) |char| {
-            self.writeChar(char);
-        }
+const writer = std.io.Writer(void, error{}, writeFn){ .context = {} };
 
-        return string.len;
-    }
-
-    pub fn writer(self: Self) Writer {
-        return .{ .context = self };
-    }
-};
+pub fn print(comptime format: []const u8, args: anytype) void {
+    std.fmt.format(writer, format, args) catch unreachable;
+}

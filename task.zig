@@ -44,19 +44,10 @@ const TaskRegs = packed struct {
 };
 
 const Task = struct {
+    const STACK_SIZE = 1024;
+
     regs: TaskRegs = .{ .ra = 0, .sp = 0 },
     stack: [STACK_SIZE]u8 = [_]u8{0} ** STACK_SIZE,
-
-    const STACK_SIZE = 1024;
-    //pub fn create(func: fn () void) Task {
-    //    var task: Task = undefined;
-    //    var stack = [_]u8{0} ** STACK_SIZE;
-
-    //    try print("task created: stack.ptr {*}\n", .{&stack});    // 问题出在这
-    //    task.regs = TaskRegs.new(func, &stack);
-    //    task.stack = &stack;
-    //    return task;
-    //}
 };
 
 // 为了让 switch_to 能访问到，它必须是全局变量
@@ -92,7 +83,7 @@ pub const Tasks = struct {
     pub fn info(self: *Tasks) void {
         comptime var i = 0;
         inline for (.{ user_task0, user_task1 }) |func| {
-            try print("task{d}: {any}, stack: {*} -> {*}\n", .{
+            print("task{d}: {any}, stack: {*} -> {*}\n", .{
                 i,
                 func,
                 &self.tasks[i].stack[0],
@@ -113,10 +104,10 @@ pub const Tasks = struct {
 };
 
 fn user_task0() void {
-    try print("Task 0: Created!\n", .{});
+    print("Task 0: Created!\n", .{});
 
     while (true) {
-        try print("Task 0: Running...\n", .{});
+        print("Task 0: Running...\n", .{});
         trap.tests(); // exception!!
 
         delay(1000);
@@ -125,10 +116,10 @@ fn user_task0() void {
 }
 
 fn user_task1() void {
-    try print("Task 1: Created!\n", .{});
+    print("Task 1: Created!\n", .{});
 
     while (true) {
-        try print("Task 1: Running...\n", .{});
+        print("Task 1: Running...\n", .{});
         delay(1000);
         tasks.yield();
     }

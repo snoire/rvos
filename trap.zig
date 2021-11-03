@@ -13,14 +13,14 @@ export fn trap_handler(epc: u32, cause: u32) u32 {
 
     if (cause & 0x80000000 != 0) {
         switch (cause_code) {
-            3 => try print("software interruption!\n", .{}),
-            7 => try print("timer interruption!\n", .{}),
-            11 => try print("external interruption!\n", .{}),
-            else => try print("unknown async exception!\n", .{}),
+            3 => print("software interruption!\n", .{}),
+            7 => print("timer interruption!\n", .{}),
+            11 => print("external interruption!\n", .{}),
+            else => print("unknown async exception!\n", .{}),
         }
     } else {
         // Synchronous trap - exception
-        try print("Sync exceptions!, code = {d}\n", .{cause_code});
+        print("Sync exceptions!, code = {d}\n", .{cause_code});
         //@panic("OOPS! What can I do!");
     }
 
@@ -41,5 +41,5 @@ pub fn tests() void { // safe, fast, small 模式下这个函数都被优化没�
     //var a: c_int = @intToPtr([*c]u32, 0).*;
     //_ = a;
 
-    try print("Yeah! I'm return back from trap!\n", .{});
+    print("Yeah! I'm return back from trap!\n", .{});
 }
