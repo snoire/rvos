@@ -108,7 +108,7 @@ fn user_task0() void {
 
     while (true) {
         print("Task 0: Running...\n", .{});
-        trap.tests(); // exception!!
+        //trap.tests(); // exception!!
 
         delay(1000);
         tasks.yield();

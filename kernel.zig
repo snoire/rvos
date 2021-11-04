@@ -9,6 +9,7 @@ const allocator = page.allocator;
 
 const task = @import("task.zig");
 const trap = @import("trap.zig");
+const plic = @import("plic.zig");
 
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace) noreturn {
     @setCold(true);
@@ -21,6 +22,7 @@ export fn start_kernel() noreturn {
     page.init();
     task.Tasks.init();
     trap.init();
+    plic.init();
 
     main() catch {
         @panic("ops!\n");

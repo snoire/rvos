@@ -57,6 +57,13 @@ pub const Uart = enum(u3) {
     /// FIFO Control Register (W)
     pub const fcr: Self = .isr;
 
+    /// Divisor Latch, LSB (R/W)
+    pub const dll: Self = .rhr;
+    /// Divisor Latch, MSB (R/W)
+    pub const dlm: Self = .ier;
+    /// Prescaler Division (W)
+    pub const psd: Self = .lsr;
+
     pub usingnamespace MMIO(Self);
 };
 
@@ -72,16 +79,22 @@ pub const CLINT = enum(usize) {
 
 /// MMIO addresses for the Platform Level Interrupt Controller.
 pub const PLIC = enum(usize) {
+    const base = 0x0c00_0000;
+    const Self = @This();
+
     /// Sets the priority of a particular interrupt source
-    priority = 0x0c00_0000,
+    priority = 0x0,
     /// Contains a list of interrupts that have been triggered (are pending)
-    pending = 0x0c00_1000,
+    pending = 0x1000,
     /// Enable/disable certain interrupt sources
-    enable = 0x0c00_2000,
+    enable = 0x2000,
     /// Sets the threshold that interrupts must meet before being able to trigger.
-    threshold = 0x0c20_0000,
-    /// Returns the next interrupt in priority order or completes handling of a particular interrupt.
-    claim_or_complete = 0x0c20_0004,
+    threshold = 0x20_0000,
+    /// Returns the next interrupt in priority order
+    claim = 0x20_0004,
+
+    /// Completes handling of a particular interrupt
+    pub const complete: Self = .claim;
 
     pub usingnamespace MMIO(@This());
 };

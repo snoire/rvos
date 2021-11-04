@@ -1,5 +1,6 @@
 const print = @import("root").print;
 const arch = @import("root").arch;
+const Plic = @import("plic.zig");
 extern fn trap_vector() callconv(.C) void;
 
 pub fn init() void {
@@ -15,7 +16,10 @@ export fn trap_handler(epc: u32, cause: u32) u32 {
         switch (cause_code) {
             3 => print("software interruption!\n", .{}),
             7 => print("timer interruption!\n", .{}),
-            11 => print("external interruption!\n", .{}),
+            11 => {
+                print("external interruption!\n", .{});
+                Plic.handle();
+            },
             else => print("unknown async exception!\n", .{}),
         }
     } else {
@@ -24,7 +28,7 @@ export fn trap_handler(epc: u32, cause: u32) u32 {
         //@panic("OOPS! What can I do!");
     }
 
-    return_pc += 2; // 反汇编看，触发异常的指令长度为 2
+    //return_pc += 2; // 反汇编看，触发异常的指令长度为 2
     return return_pc;
 }
 
