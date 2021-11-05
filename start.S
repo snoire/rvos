@@ -9,6 +9,7 @@
 _start:
         # park harts with id != 0
         csrr    t0, mhartid             # read current hart id
+        mv      tp, t0                  # keep CPU's hartid in its tp for later usage.
         bnez    t0, park                # if we're not on the hart 0
                                         # we park the hart
         # Setup stacks, the stack grows from bottom to top, so we put the
