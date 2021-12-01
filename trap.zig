@@ -38,6 +38,7 @@ pub fn tests() void { // safe, fast, small 模式下这个函数都被优化没�
     //const ptr = @intToPtr(?*u32, 0x0);
     //ptr.* = 100;
     //
+    //@intToPtr(*allowzero u32, 0).* = 100; // 这种写法好像更标准一点
     @intToPtr([*c]u32, 0).* = 100; // 而且这一行被翻译成两条指令
 
     // Synchronous exception code = 5
