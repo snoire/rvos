@@ -5,16 +5,10 @@ pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
     os.setBuildMode(mode);
 
-    // Workaround for https://github.com/ziglang/zig/issues/9760
-    var sub_set = std.Target.Cpu.Feature.Set.empty;
-    const float: std.Target.riscv.Feature = .d;
-    sub_set.addFeature(@enumToInt(float));
-
     os.setTarget(.{
         .cpu_arch = .riscv32,
         .os_tag = .freestanding,
         .abi = .none,
-        .cpu_features_sub = sub_set,
     });
 
     os.setLinkerScriptPath(.{ .path = "linker.ld" });
