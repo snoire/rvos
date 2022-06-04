@@ -3,6 +3,7 @@ const root = @import("kernel.zig");
 const csr = @import("csr.zig");
 const trap = @import("trap.zig");
 const clint = @import("clint.zig");
+const lock = @import("lock.zig");
 
 const print = root.print;
 
@@ -114,14 +115,29 @@ pub fn init() void {
     }
 }
 
+// https://www.reddit.com/r/Zig/comments/tuq7a0/found_a_cool_way_to_loop_over_a_range
+fn range(n: usize) []const void {
+    return @as([*]const void, undefined)[0..n];
+}
+
+const use_lock = true;
+
 fn user_task0() void {
     print("Task 0: Created!\n", .{});
-    yield(); // software interruption
 
-    print("Task 0: I'm back!\n", .{});
     while (true) {
-        print("Task 0: Running...\n", .{});
-        delay(1000);
+        if (use_lock) lock.lock();
+
+        print("Task 0: Begin ... \n", .{});
+
+        for (range(5)) |_| {
+            print("Task 0: Running...\n", .{});
+            delay(1000);
+        }
+
+        print("Task 0: End ... \n", .{});
+
+        if (use_lock) lock.unlock();
     }
 }
 
@@ -129,8 +145,12 @@ fn user_task1() void {
     print("Task 1: Created!\n", .{});
 
     while (true) {
-        print("Task 1: Running...\n", .{});
-        delay(1000);
+        print("Task 1: Begin ... \n", .{});
+        for (range(5)) |_| {
+            print("Task 1: Running...\n", .{});
+            delay(1000);
+        }
+        print("Task 1: End ... \n", .{});
     }
 }
 
