@@ -76,6 +76,7 @@ pub var two_tasks: [MAX_TASKS]Task = undefined; // 在堆里分配会好写一�
 
 var top: usize = undefined;
 var current: usize = undefined;
+var spinlock: lock.SpinLock = undefined;
 
 pub fn info() void {
     for (two_tasks) |*task, i| { // 必须是 *task 才能拿到原变量的地址
@@ -105,6 +106,8 @@ pub fn init() void {
 
     clint.software.init();
 
+    spinlock = lock.SpinLock.init();
+
     // 给全局变量赋值
     top = 0;
     current = 1;
@@ -120,13 +123,11 @@ fn range(n: usize) []const void {
     return @as([*]const void, undefined)[0..n];
 }
 
-const use_lock = true;
-
 fn user_task0() void {
     print("Task 0: Created!\n", .{});
 
     while (true) {
-        if (use_lock) lock.lock();
+        var held = spinlock.acquire();
 
         print("Task 0: Begin ... \n", .{});
 
@@ -137,7 +138,10 @@ fn user_task0() void {
 
         print("Task 0: End ... \n", .{});
 
-        if (use_lock) lock.unlock();
+        held.release();
+
+        // 让另一 task 有机会执行
+        delay(5000);
     }
 }
 
@@ -145,12 +149,19 @@ fn user_task1() void {
     print("Task 1: Created!\n", .{});
 
     while (true) {
+        var held = spinlock.acquire();
+
         print("Task 1: Begin ... \n", .{});
         for (range(5)) |_| {
             print("Task 1: Running...\n", .{});
             delay(1000);
         }
         print("Task 1: End ... \n", .{});
+
+        held.release();
+
+        // 让另一 task 有机会执行
+        delay(5000);
     }
 }
 
