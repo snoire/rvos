@@ -3,7 +3,7 @@ const root = @import("kernel.zig");
 const csr = @import("csr.zig");
 const trap = @import("trap.zig");
 const clint = @import("clint.zig");
-const lock = @import("lock.zig");
+const swtimer = @import("swtimer.zig");
 
 const print = root.print;
 
@@ -58,7 +58,7 @@ const TaskRegs = packed struct {
 
 const Task = struct {
     // 栈太小的话，会覆盖 context 的空间，mepc 地址不对导致执行 mret 异常
-    const STACK_SIZE = if (builtin.mode == .Debug) 2048 else 512;
+    const STACK_SIZE = if (builtin.mode == .Debug) 2048 else 1024;
 
     context: TaskRegs,
     stack: [STACK_SIZE]u8 = [_]u8{65} ** STACK_SIZE, // 这里的默认初始化也没有用到，two_tasks 是 undefined
@@ -76,7 +76,6 @@ pub var two_tasks: [MAX_TASKS]Task = undefined; // 在堆里分配会好写一�
 
 var top: usize = undefined;
 var current: usize = undefined;
-var spinlock: lock.SpinLock = undefined;
 
 pub fn info() void {
     for (two_tasks) |*task, i| { // 必须是 *task 才能拿到原变量的地址
@@ -104,10 +103,6 @@ pub fn init() void {
     // 初始化 mscratch
     csr.write("mscratch", 0);
 
-    clint.software.init();
-
-    spinlock = lock.SpinLock.init();
-
     // 给全局变量赋值
     top = 0;
     current = 1;
@@ -118,30 +113,30 @@ pub fn init() void {
     }
 }
 
-// https://www.reddit.com/r/Zig/comments/tuq7a0/found_a_cool_way_to_loop_over_a_range
-fn range(n: usize) []const void {
-    return @as([*]const void, undefined)[0..n];
+const UserData = struct {
+    counter: usize,
+    str: []const u8,
+};
+
+pub var person = UserData{ .counter = 0, .str = "Jack" };
+
+pub fn callback(arg: *anyopaque) void {
+    var data = @ptrCast(*UserData, @alignCast(@alignOf(*UserData), arg));
+    data.counter += 1;
+    print("======> TIMEOUT: {s}: {}\n", .{ data.str, data.counter });
 }
 
 fn user_task0() void {
     print("Task 0: Created!\n", .{});
+    yield();
+
+    swtimer.create(.{ .func = callback, .arg = &person, .tick = 3 });
+    swtimer.create(.{ .func = callback, .arg = &person, .tick = 5 });
+    swtimer.create(.{ .func = callback, .arg = &person, .tick = 7 });
 
     while (true) {
-        var held = spinlock.acquire();
-
-        print("Task 0: Begin ... \n", .{});
-
-        for (range(5)) |_| {
-            print("Task 0: Running...\n", .{});
-            delay(1000);
-        }
-
-        print("Task 0: End ... \n", .{});
-
-        held.release();
-
-        // 让另一 task 有机会执行
-        delay(5000);
+        print("Task 0: Running...\n", .{});
+        delay(1000);
     }
 }
 
@@ -149,19 +144,8 @@ fn user_task1() void {
     print("Task 1: Created!\n", .{});
 
     while (true) {
-        var held = spinlock.acquire();
-
-        print("Task 1: Begin ... \n", .{});
-        for (range(5)) |_| {
-            print("Task 1: Running...\n", .{});
-            delay(1000);
-        }
-        print("Task 1: End ... \n", .{});
-
-        held.release();
-
-        // 让另一 task 有机会执行
-        delay(5000);
+        print("Task 1: Running...\n", .{});
+        delay(1000);
     }
 }
 

@@ -56,7 +56,7 @@ export fn trap_handler(epc: u32, cause: u32) u32 {
 
     if (cause & 0x80000000 != 0) {
         const code = @intToEnum(mcause.interrupt, cause_code);
-        print("{s}\n", .{std.meta.tagName(code)});
+        print("\x1b[32m" ++ "{s}\n" ++ "\x1b[m", .{@tagName(code)});
 
         switch (code) {
             .@"Machine software interrupt" => {
@@ -73,8 +73,8 @@ export fn trap_handler(epc: u32, cause: u32) u32 {
         }
     } else {
         // Synchronous trap - exception
-        print("{s}!\n", .{std.meta.tagName(@intToEnum(mcause.exception, cause_code))});
-        @panic("sync exceptions");
+        const code = @intToEnum(mcause.exception, cause_code);
+        @panic(@tagName(code));
     }
 
     return return_pc;

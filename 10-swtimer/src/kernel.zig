@@ -5,7 +5,11 @@ const page = @import("page.zig");
 const task = @import("task.zig");
 const trap = @import("trap.zig");
 const plic = @import("plic.zig");
-const timer = @import("clint.zig").timer;
+const clint = @import("clint.zig");
+const swtimer = @import("swtimer.zig");
+
+const softintr = clint.software;
+const timerintr = clint.timer;
 
 pub const print = uart.print;
 pub const allocator = page.fba.allocator();
@@ -15,7 +19,9 @@ const stack_bytes_slice = stack_bytes[0..];
 
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace) noreturn {
     @setCold(true);
-    print("KERNEL PANIC: {s}!\n", .{msg});
+    csr.clear("mstatus", csr.mstatus.mie); // disable interrupt
+
+    print("\x1b[31m" ++ "KERNEL PANIC: {s}!\n" ++ "\x1b[m", .{msg});
     while (true) {}
 }
 
@@ -38,10 +44,12 @@ fn kmain() noreturn {
     task.init();
     trap.init();
     plic.init();
-    timer.init();
+    softintr.init();
+    timerintr.init();
+    swtimer.init();
 
-    main() catch |e| {
-        @panic(std.meta.tagName(e));
+    main() catch |err| {
+        @panic(std.meta.tagName(err));
     };
 
     while (true) {}

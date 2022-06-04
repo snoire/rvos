@@ -2,6 +2,7 @@ const std = @import("std");
 const root = @import("kernel.zig");
 const csr = @import("csr.zig");
 const task = @import("task.zig");
+const swtimer = @import("swtimer.zig");
 
 const print = root.print;
 
@@ -53,9 +54,20 @@ pub const timer = struct {
 
         print("tick: {}\n", .{tick});
         load(interval);
+        check(); // swtimer
 
         // Preemptive Multitasking!!
         task.schedule();
+    }
+
+    // this routine should be called in interrupt context (interrupt is disabled)
+    fn check() void {
+        for (swtimer.timer_list.items) |t, i| {
+            if (tick >= t.tick) {
+                t.func(t.arg);
+                _ = swtimer.timer_list.swapRemove(i);
+            }
+        }
     }
 };
 
