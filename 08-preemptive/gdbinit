@@ -1,0 +1,20 @@
+#display/z $ra
+#display/z $sp
+display/z $mscratch
+display/z $mepc
+display/z $a0
+display/z $a1
+display/z $t5
+display/z $t6
+
+#display/z $t6
+
+b kmain
+b switch_to
+b trap_vector
+target remote : 1234
+c
+
+#set disassemble-next-line on
+layout split
+update

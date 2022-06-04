@@ -1,11 +1,15 @@
-const print = @import("root").print;
-const arch = @import("root").arch;
+const std = @import("std");
+const builtin = @import("builtin");
+const root = @import("kernel.zig");
+const csr = @import("csr.zig");
 const Plic = @import("plic.zig");
+
+const print = root.print;
 extern fn trap_vector() callconv(.C) void;
 
 pub fn init() void {
     // set the trap-vector base-address for machine-mode
-    arch.w_mtvec(@ptrToInt(trap_vector));
+    csr.write("mtvec", @ptrToInt(trap_vector));
 }
 
 export fn trap_handler(epc: u32, cause: u32) u32 {
@@ -25,10 +29,19 @@ export fn trap_handler(epc: u32, cause: u32) u32 {
     } else {
         // Synchronous trap - exception
         print("Sync exceptions!, code = {d}\n", .{cause_code});
-        //@panic("OOPS! What can I do!");
+        @panic("OOPS! Sync exceptions!");
+
+        //// 反汇编看，debug 模式触发异常的指令长度为 2，其他模式是 4
+        //// 用 zig build-exe -target riscv32-freestanding --show-builtin 看，用了压缩指令
+        //const compress: std.Target.riscv.Feature = .c;
+        //if (builtin.cpu.features.isEnabled(@enumToInt(compress)) and builtin.mode == .Debug) {
+        //    return_pc += 2;
+        //} else {
+        //    return_pc += 4;
+        //}
     }
 
-    //return_pc += 2; // 反汇编看，触发异常的指令长度为 2
+    //print("here, {}\n", .{@src().line});
     return return_pc;
 }
 
@@ -38,13 +51,14 @@ pub fn tests() void { // safe, fast, small 模式下这个函数都被优化没�
     //const ptr = @intToPtr(?*u32, 0x0);
     //ptr.* = 100;
     //
-    //@intToPtr(*allowzero u32, 0).* = 100; // 这种写法好像更标准一点
-    @intToPtr([*c]u32, 0).* = 100; // 而且这一行被翻译成两条指令
+    //@intToPtr(*u32, 0).* = 100; // pointer type '*u32' does not allow address zero
+    //@intToPtr([*c]u32, 0).* = 100; // c 指针没有限制
+    @intToPtr(*allowzero volatile usize, 0).* = 100; // 加 volatile 才不会被优化
 
     // Synchronous exception code = 5
     // Load access fault
-    //var a: c_int = @intToPtr([*c]u32, 0).*;
-    //_ = a;
+    var a = @intToPtr(*allowzero volatile usize, 0).*;
+    _ = a;
 
     print("Yeah! I'm return back from trap!\n", .{});
 }

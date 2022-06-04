@@ -6,9 +6,8 @@ extern var _heap_start: u1;
 // 值其实体现在它们的地址上：heap_size == &_heap_size
 extern const _heap_size: u8;
 
-var fba: std.heap.FixedBufferAllocator = undefined;
-// 必须 init 之后才能用
-pub const allocator = &fba.allocator;
+// 必须 init 之后才能用哦
+pub var fba: std.heap.FixedBufferAllocator = undefined;
 
 pub fn init() void {
     const heap_start_ptr = @ptrCast([*]u8, &_heap_start);
@@ -25,7 +24,6 @@ extern const _data_start: u8;
 extern const _data_end: u8;
 extern const _bss_start: u8;
 extern const _bss_end: u8;
-extern const _stacks: u8;
 
 pub fn info() void {
     print(
@@ -35,7 +33,6 @@ pub fn info() void {
         \\DATA:   0x{x} -> 0x{x}
         \\BSS:    0x{x} -> 0x{x}
         \\HEAP:   0x{x} -> 0x{x}
-        \\STACK:  0x{x} -> 0x{x}
         \\
     , .{
         @ptrToInt(&_heap_start),
@@ -51,10 +48,5 @@ pub fn info() void {
         @ptrToInt(&_bss_end),
         @ptrToInt(&_heap_start),
         @ptrToInt(&_heap_start) + @ptrToInt(&_heap_size),
-        @ptrToInt(&_stacks),
-        @ptrToInt(&_stacks) + 1024 * 8 - 1,
     });
 }
-
-//pub fn tests() void {
-//

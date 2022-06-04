@@ -1,0 +1,13 @@
+display/z $ra
+display/z $sp
+display/z $mscratch
+display/z $a0
+display/z $t6
+
+b _start
+target remote : 1234
+c
+
+set disassemble-next-line on
+layout split
+update
