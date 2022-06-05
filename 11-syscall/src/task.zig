@@ -9,7 +9,7 @@ const print = root.print;
 
 extern fn switch_to(to: *TaskRegs) callconv(.C) void; // 返回类型不能是 noreturn
 
-const TaskRegs = packed struct {
+pub const TaskRegs = packed struct {
     // Layout must be kept in sync with switch_to
     // ignore x0
     ra: u32 = 0,
@@ -126,13 +126,30 @@ pub fn callback(arg: *anyopaque) void {
     print("======> TIMEOUT: {s}: {}\n", .{ data.str, data.counter });
 }
 
+comptime {
+    asm (
+        \\.global gethid
+        \\gethid:
+        \\	li a7, 0
+        \\	ecall
+        \\	ret
+    );
+}
+extern fn gethid(hartid: *u32) u32;
+
 fn user_task0() void {
     print("Task 0: Created!\n", .{});
-    yield();
+    //yield();
 
-    swtimer.create(.{ .func = callback, .arg = &person, .tick = 3 });
-    swtimer.create(.{ .func = callback, .arg = &person, .tick = 5 });
-    swtimer.create(.{ .func = callback, .arg = &person, .tick = 7 });
+    //swtimer.create(.{ .func = callback, .arg = &person, .tick = 3 });
+    //swtimer.create(.{ .func = callback, .arg = &person, .tick = 5 });
+    //swtimer.create(.{ .func = callback, .arg = &person, .tick = 7 });
+
+    var hartid: u32 = 65;
+    print("ptr: 0x{x}\n", .{@ptrToInt(&hartid)});
+
+    _ = gethid(&hartid);
+    print("hartid: " ++ "\x1b[32m" ++ "{}\n" ++ "\x1b[m", .{hartid});
 
     while (true) {
         print("Task 0: Running...\n", .{});

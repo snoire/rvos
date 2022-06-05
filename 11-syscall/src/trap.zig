@@ -6,6 +6,7 @@ const csr = @import("csr.zig");
 const plic = @import("plic.zig");
 const task = @import("task.zig");
 const clint = @import("clint.zig");
+const syscall = @import("syscall.zig");
 
 const print = root.print;
 extern fn trap_vector() callconv(.C) void;
@@ -50,11 +51,11 @@ pub fn init() void {
     csr.write("mtvec", @ptrToInt(trap_vector));
 }
 
-export fn trap_handler(epc: u32, cause: u32) u32 {
+export fn trap_handler(epc: u32, cause: u32, cxt: *task.TaskRegs) u32 {
     var return_pc: u32 = epc;
     var cause_code: u32 = cause & 0xfff;
 
-    if (cause & 0x80000000 != 0) {
+    if (cause & 0x80000000 != 0) { // Asynchronous trap - interrupt
         const code = @intToEnum(mcause.interrupt, cause_code);
         print("\x1b[32m" ++ "{s}\n" ++ "\x1b[m", .{@tagName(code)});
 
@@ -71,10 +72,16 @@ export fn trap_handler(epc: u32, cause: u32) u32 {
             },
             else => print("unknown async exception!\n", .{}),
         }
-    } else {
-        // Synchronous trap - exception
+    } else { // Synchronous trap - exception
         const code = @intToEnum(mcause.exception, cause_code);
-        @panic(@tagName(code));
+        switch (code) {
+            .@"Environment call from U-mode" => {
+                print("System call from U-mode!\n", .{});
+                syscall.call(cxt);
+                return_pc += 4;
+            },
+            else => @panic(@tagName(code)),
+        }
     }
 
     return return_pc;
@@ -83,7 +90,7 @@ export fn trap_handler(epc: u32, cause: u32) u32 {
 pub fn tests() void {
     // Synchronous exception code = 7
     // Store/AMO access fault
-    @intToPtr(*allowzero volatile usize, 0).* = 100; // 加 volatile 才不会被优化
+    @intToPtr(*allowzero volatile usize, 0).* = 100;
 
     // Synchronous exception code = 5
     // Load access fault
