@@ -51,11 +51,12 @@ pub fn init() void {
     csr.write("mtvec", @ptrToInt(trap_vector));
 }
 
-export fn trap_handler(epc: u32, cause: u32, cxt: *task.TaskRegs) u32 {
-    var return_pc: u32 = epc;
-    var cause_code: u32 = cause & 0xfff;
+export fn trap_handler(epc: usize, cause: usize, cxt: *task.TaskRegs) usize {
+    var return_pc: usize = epc;
+    const highest_bit = @bitSizeOf(usize) - 1;
+    const cause_code: usize = cause & ~@as(usize, (1 << highest_bit));
 
-    if (cause & 0x80000000 != 0) { // Asynchronous trap - interrupt
+    if (cause >> highest_bit == 1) { // Asynchronous trap - interrupt
         const code = @intToEnum(mcause.interrupt, cause_code);
         print("\x1b[32m" ++ "{s}\n" ++ "\x1b[m", .{@tagName(code)});
 

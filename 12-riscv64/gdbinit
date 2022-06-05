@@ -12,6 +12,7 @@ display/z $t6
 b kmain
 b switch_to
 b trap_vector
+b panic
 target remote : 1234
 c
 

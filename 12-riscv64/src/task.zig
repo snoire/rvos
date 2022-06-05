@@ -12,41 +12,41 @@ extern fn switch_to(to: *TaskRegs) callconv(.C) void; // 返回类型不能是 n
 pub const TaskRegs = packed struct {
     // Layout must be kept in sync with switch_to
     // ignore x0
-    ra: u32 = 0,
-    sp: u32,
-    gp: u32 = 0,
-    tp: u32 = 0,
-    t0: u32 = 0,
-    t1: u32 = 0,
-    t2: u32 = 0,
-    s0: u32 = 0,
-    s1: u32 = 0,
-    a0: u32 = 0,
-    a1: u32 = 0,
-    a2: u32 = 0,
-    a3: u32 = 0,
-    a4: u32 = 0,
-    a5: u32 = 0,
-    a6: u32 = 0,
-    a7: u32 = 0,
-    s2: u32 = 0,
-    s3: u32 = 0,
-    s4: u32 = 0,
-    s5: u32 = 0,
-    s6: u32 = 0,
-    s7: u32 = 0,
-    s8: u32 = 0,
-    s9: u32 = 0,
-    s10: u32 = 0,
-    s11: u32 = 0,
-    t3: u32 = 0,
-    t4: u32 = 0,
-    t5: u32 = 0,
-    t6: u32 = 0,
+    ra: usize = 0,
+    sp: usize,
+    gp: usize = 0,
+    tp: usize = 0,
+    t0: usize = 0,
+    t1: usize = 0,
+    t2: usize = 0,
+    s0: usize = 0,
+    s1: usize = 0,
+    a0: usize = 0,
+    a1: usize = 0,
+    a2: usize = 0,
+    a3: usize = 0,
+    a4: usize = 0,
+    a5: usize = 0,
+    a6: usize = 0,
+    a7: usize = 0,
+    s2: usize = 0,
+    s3: usize = 0,
+    s4: usize = 0,
+    s5: usize = 0,
+    s6: usize = 0,
+    s7: usize = 0,
+    s8: usize = 0,
+    s9: usize = 0,
+    s10: usize = 0,
+    s11: usize = 0,
+    t3: usize = 0,
+    t4: usize = 0,
+    t5: usize = 0,
+    t6: usize = 0,
     // upon is trap frame
 
     // save the pc to run in next schedule cycle
-    pc: u32, // offset: 31 *4 = 124
+    pc: usize, // offset: 31 *4 = 124
 
     pub fn new(thread_stack: []u8, func: fn () void) TaskRegs {
         return TaskRegs{
@@ -135,7 +135,7 @@ comptime {
         \\	ret
     );
 }
-extern fn gethid(hartid: *u32) u32;
+extern fn gethid(hartid: *usize) usize;
 
 fn user_task0() void {
     print("Task 0: Created!\n", .{});
@@ -145,7 +145,7 @@ fn user_task0() void {
     //swtimer.create(.{ .func = callback, .arg = &person, .tick = 5 });
     //swtimer.create(.{ .func = callback, .arg = &person, .tick = 7 });
 
-    var hartid: u32 = 65;
+    var hartid: usize = 65;
     print("ptr: 0x{x}\n", .{@ptrToInt(&hartid)});
 
     _ = gethid(&hartid);

@@ -14,7 +14,7 @@ pub fn build(b: *std.build.Builder) void {
         sub_set.addFeature(@enumToInt(Feature.d));
 
         os.setTarget(.{
-            .cpu_arch = .riscv32,
+            .cpu_arch = .riscv64,
             .os_tag = .freestanding,
             .abi = .none,
             .cpu_features_sub = sub_set,
@@ -22,6 +22,7 @@ pub fn build(b: *std.build.Builder) void {
 
         os.setLinkerScriptPath(.{ .path = "linker.ld" });
         os.addAssemblyFile("src/entry.S");
+        os.code_model = .medium;
 
         os.strip = b.option(bool, "strip", "Removes symbols and sections from file") orelse false;
         os.override_dest_dir = .{ .custom = "./" };
@@ -40,7 +41,7 @@ pub fn build(b: *std.build.Builder) void {
         // Disable pmp. Details please refer to
         // https://gitlab.com/qemu-project/qemu/-/issues/585 or
         // https://gitee.com/unicornx/riscv-operating-system-mooc/issues/I441IC
-        "-cpu", "rv32,pmp=false",
+        "-cpu", "rv64,pmp=false",
         "-kernel", "zig-out/os.elf",
         // zig fmt: on
     };
@@ -48,7 +49,7 @@ pub fn build(b: *std.build.Builder) void {
     // run qemu
     {
         var qemu_tls = b.step("run", "Run os.elf in QEMU");
-        var qemu = b.addSystemCommand(&[_][]const u8{"qemu-system-riscv32"});
+        var qemu = b.addSystemCommand(&[_][]const u8{"qemu-system-riscv64"});
         qemu.addArgs(&qemu_args);
 
         qemu.step.dependOn(b.getInstallStep());
@@ -58,7 +59,7 @@ pub fn build(b: *std.build.Builder) void {
     // run qemu with gdb server
     {
         var qemu_tls = b.step("qemu", "Run os.elf in QEMU with gdb server");
-        var qemu = b.addSystemCommand(&[_][]const u8{"qemu-system-riscv32"});
+        var qemu = b.addSystemCommand(&[_][]const u8{"qemu-system-riscv64"});
         qemu.addArgs(&(qemu_args ++ [_][]const u8{ "-s", "-S" }));
 
         qemu.step.dependOn(b.getInstallStep());

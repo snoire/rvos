@@ -22,8 +22,15 @@ pub const Plic = struct {
 
     /// Enable/disable certain interrupt sources
     fn enable(hart: u3, irq: IRQ) void {
-        const ptr = @intToPtr(*volatile u64, base + 0x2000 + @as(usize, hart) * 0x80);
-        ptr.* |= @as(u64, 1) << @enumToInt(irq);
+        const id = @enumToInt(irq);
+        const ptr = @intToPtr([*]volatile u32, base + 0x2000 + @as(usize, hart) * 0x80);
+
+        // only 32-bit word accesses are allowed?
+        if (id < 32) {
+            ptr[0] |= @as(u32, 1) << @intCast(u5, id);
+        } else {
+            ptr[1] |= @as(u32, 1) << @intCast(u5, id - 32);
+        }
     }
 
     /// Sets the threshold that interrupts must meet before being able to trigger.
