@@ -63,8 +63,6 @@ fn main() !void {
 
     // schedule() 的 switch_to 最后会执行 mret，第一次调用 schedule() 时
     // 不是在 trap handler 里，所以需要手动设置 mpp 和 mpie
-    // https://github.com/plctlab/riscv-operating-system-mooc/issues/3
-    // https://www.programmerall.com/article/92912333203
     csr.set("mstatus", csr.mstatus.mpp | csr.mstatus.mpie);
     task.schedule();
 

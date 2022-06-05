@@ -32,15 +32,17 @@ pub fn build(b: *std.build.Builder) void {
     }
 
     const qemu_args = [_][]const u8{
+        // zig fmt: off
         "-nographic",
-        "-smp",
-        "1",
-        "-machine",
-        "virt",
-        "-bios",
-        "none",
-        "-kernel",
-        "zig-out/os.elf",
+        "-smp", "1",
+        "-machine", "virt",
+        "-bios", "none",
+        // Disable pmp. Details please refer to
+        // https://gitlab.com/qemu-project/qemu/-/issues/585 or
+        // https://gitee.com/unicornx/riscv-operating-system-mooc/issues/I441IC
+        "-cpu", "rv32,pmp=false",
+        "-kernel", "zig-out/os.elf",
+        // zig fmt: on
     };
 
     // run qemu
