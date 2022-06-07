@@ -58,7 +58,12 @@ pub const TaskRegs = packed struct {
 
 const Task = struct {
     // 栈太小的话，会覆盖 context 的空间，mepc 地址不对导致执行 mret 异常
-    const STACK_SIZE = if (builtin.mode == .Debug) 2048 else 1024;
+    const STACK_SIZE = switch (builtin.mode) {
+        .Debug => 1760,
+        .ReleaseSafe => 1056,
+        .ReleaseFast => 768,
+        .ReleaseSmall => 512,
+    };
 
     context: TaskRegs,
     stack: [STACK_SIZE]u8 = [_]u8{65} ** STACK_SIZE, // 这里的默认初始化也没有用到，two_tasks 是 undefined
