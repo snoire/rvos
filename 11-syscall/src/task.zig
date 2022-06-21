@@ -4,6 +4,7 @@ const csr = @import("csr.zig");
 const trap = @import("trap.zig");
 const clint = @import("clint.zig");
 const swtimer = @import("swtimer.zig");
+const syscall = @import("syscall.zig");
 
 const print = root.print;
 
@@ -126,17 +127,6 @@ pub fn callback(arg: *anyopaque) void {
     print("======> TIMEOUT: {s}: {}\n", .{ data.str, data.counter });
 }
 
-comptime {
-    asm (
-        \\.global gethid
-        \\gethid:
-        \\	li a7, 0
-        \\	ecall
-        \\	ret
-    );
-}
-extern fn gethid(hartid: *u32) u32;
-
 fn user_task0() void {
     print("Task 0: Created!\n", .{});
     //yield();
@@ -147,8 +137,11 @@ fn user_task0() void {
 
     var hartid: u32 = 65;
     print("ptr: 0x{x}\n", .{@ptrToInt(&hartid)});
+    _ = syscall.gethid(&hartid);
 
-    _ = gethid(&hartid);
+    const string = "string";
+    _ = syscall.echostr(string[0..4]);
+
     print("hartid: " ++ "\x1b[32m" ++ "{}\n" ++ "\x1b[m", .{hartid});
 
     while (true) {
