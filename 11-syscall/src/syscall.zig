@@ -25,14 +25,14 @@ fn slice(ptr: [*]const u8, len: usize) []const u8 {
 pub fn call(ctx: *task.TaskRegs) void {
     const sysnum = @intToEnum(syscall, ctx.a7);
     switch (sysnum) {
-        .gethid => ctx.a0 = gethartid(@intToPtr(*align(1) u32, ctx.a0)),
+        .gethid => ctx.a0 = gethartid(@intToPtr(*u32, ctx.a0)),
         .echo => sys_echo(slice(@intToPtr([*]const u8, ctx.a0), ctx.a1)),
         else => print("unknown syscall\n", .{}),
     }
 }
 
-fn gethartid(id: *align(1) u32) u32 {
-    print("--> sys_gethid, arg0 = 0x{x}\n", .{@ptrToInt(id)}); // the alignment of ctx.a0 is not 4
+fn gethartid(id: *u32) u32 {
+    print("--> sys_gethid, arg0 = 0x{x}\n", .{@ptrToInt(id)});
     id.* = csr.read("mhartid");
     return 0;
 }

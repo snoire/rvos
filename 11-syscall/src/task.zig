@@ -128,6 +128,7 @@ pub fn callback(arg: *anyopaque) void {
 }
 
 fn user_task0() void {
+    @setAlignStack(16);
     print("Task 0: Created!\n", .{});
     //yield();
 
@@ -151,6 +152,7 @@ fn user_task0() void {
 }
 
 fn user_task1() void {
+    @setAlignStack(16);
     print("Task 1: Created!\n", .{});
 
     while (true) {
