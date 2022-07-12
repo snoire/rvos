@@ -16,18 +16,18 @@ SECTIONS
         /* 确保 .text_start (_start 函数) 在开头 */
         *(.text_start)
         *(.text .text.*)
-    }
+    } >ram
 
     /* 不指定的话，rodata 默认会放在 text 之前 */
     .rodata : { 
         *(.rodata .rodata.*)
-    }
+    } >ram
 
     .bss :{
         *(.sbss .sbss.*)
         *(.bss .bss.*)
         *(COMMON)
-    }
+    } >ram
 
     PROVIDE(_memory_start = ORIGIN(ram));
     PROVIDE(_memory_end = ORIGIN(ram) + LENGTH(ram));
